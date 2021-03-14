@@ -11,7 +11,7 @@
 	<form action="" method="post" class="form-inputs">
 		<h1>Авторизация</h1>
 		{{ form.hidden_tag() }}
-		<p>
+		<p class="mb-1">
 			{{ form.log_data.label }}<br>
 			{{ form.log_data(class="form-control") }}<br>
 			{% for error in form.log_data.errors %}
@@ -20,7 +20,7 @@
 				</div>
 			{% endfor %}
 		</p>
-		<p>
+		<p class="mb-1">
 			{{ form.password.label }}<br>
 			{{ form.password(class="form-control", type="password") }}<br>
 			{% for error in form.password.errors %}
@@ -30,8 +30,10 @@
 			{% endfor %}
 		</p>
 		<p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-		<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-		<div>{{ message }}</div>
+		<p>{{ form.submit(type="submit", class="btn btn-dark") }}</p>
+		{% if message %}
+		<p class="alert-danger alert" role="alert">{{ message }}</p>
+		{% endif %}
 	</form>
 
 {% endblock %}

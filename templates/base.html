@@ -13,7 +13,7 @@
 	<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom
 	sticky-top d-flex w-100 shadow p-3 mb-5 bg-white rounded">
 		<div class="container-fluid">
-			<a class="navbar-brand" href="/">Yandex project</a>
+			<a class="navbar-brand" href="/">HiTechStore</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
 					aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
@@ -21,7 +21,13 @@
 			<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 				<div class="navbar-nav">
 					<a class="nav-link active" aria-current="page" href="/">На главную</a>
-					<div class="position-absolute end-0 m-auto">
+					<a class="nav-link active" aria-current="page" href="/catalog">Каталог</a>
+					<form class="d-flex ms-5">
+						<input class="form-control me-2" type="search" placeholder="Поиск по тегам"
+							   aria-label="Search">
+						<button class="btn btn-outline-dark" type="submit">Поиск</button>
+					</form>
+					<div class="position-absolute end-0 user-menu">
 						{% if not current_user.is_authenticated %}
 							<a class="nav-link active d-inline me-2" href="/login">
 								Войти
@@ -30,7 +36,21 @@
 								Регистрация
 							</a>
 						{% else %}
-							<a class="nav-link active d-inline me-2" href="/logout">{{ current_user.nickname }}</a>
+							<div class="dropdown">
+								<button class="btn btn-light dropdown-toggle me-4" type="button"
+										id="dropdownMenuButton1"
+										data-bs-toggle="dropdown" aria-expanded="false">
+									{{ current_user.nickname }}
+								</button>
+								<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+									{% if current_user.is_admin %}
+										<li><a class="dropdown-item" href="/add_product">Добавить товар</a></li>
+									{% endif %}
+									<li><a class="dropdown-item" href="/cart/{{ current_user.id }}">Корзина</a></li>
+									<li><a class="dropdown-item" href="/favourites">Избранное</a></li>
+									<li><a class="dropdown-item" href="/logout">Выйти</a></li>
+								</ul>
+							</div>
 						{% endif %}
 					</div>
 				</div>
@@ -44,7 +64,7 @@
 	{% endblock %}
 </main>
 
-<footer>
+<footer class="footer">
 	<hr>
 	<p>©WingiM, 2021</p>
 	<a class="navbar-brand active position-relative d-inline" href="https://telegram.org/"

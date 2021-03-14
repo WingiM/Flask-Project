@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+</head>
+<body>
+{% extends "base.html" %}
+
+{% block content %}
+
+	<form action="" method="post" class="form-inputs" enctype="multipart/form-data">
+		<h1>Добавление товара</h1>
+		{{ form.hidden_tag() }}
+		<p class="mb-1">
+			{{ form.name.label }}<br>
+			{{ form.name(class="form-control") }}<br>
+			{% for error in form.name.errors %}
+				<div class="alert alert-danger" role="alert">
+					{{ error }}
+				</div>
+			{% endfor %}
+		</p>
+		<p class="mb-1">
+			{{ form.search_tags.label }}<br>
+			{{ form.search_tags(class="form-control") }}<br>
+			{% for error in form.search_tags.errors %}
+				<div class="alert alert-danger" role="alert">
+					{{ error }}
+				</div>
+			{% endfor %}
+		</p>
+		<p class="mb-1">
+			{{ form.image.label }}<br>
+			{{ form.image(class="form-control") }}<br>
+			{% for error in form.image.errors %}
+				<div class="alert alert-danger" role="alert">
+					{{ error }}
+				</div>
+			{% endfor %}
+		</p>
+		<p class="mb-1">
+			{{ form.price.label }}<br>
+			{{ form.price(class="form-control") }}<br>
+			{% for error in form.price.errors %}
+				<div class="alert alert-danger" role="alert">
+					{{ error }}
+				</div>
+			{% endfor %}
+		</p>
+		<p>{{ form.submit(type="submit", class="btn btn-dark") }}</p>
+		{% if message %}
+			<p class="alert-danger alert" role="alert">{{ message }}</p>
+		{% endif %}
+	</form>
+
+{% endblock %}
+</body>
+</html>
