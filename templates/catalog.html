@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+</head>
+<body>
+{% extends "base.html" %}
+
+{% block content %}
+	<div>
+		{% for row in products %}
+			<div class="row" style="margin: auto auto 10px;">
+				{% for product in row %}
+					<div class="card catalog-card">
+						<img src="{{ product.image }}" class="card-img-top" width="18rem" height="300"
+							 alt="не вышло">
+						<div class="card-body">
+							<h5 class="card-title">{{ product.name }}</h5>
+							<p class="card-text">{{ product.about }}<br>{{ product.stringed_categories }}</p>
+						</div>
+						<div class="card-footer">
+							<p class="d-inline">Цена: {{ product.price }}₽</p>
+							<a href="/catalog/{{ product.id }}" class="btn btn-outline-dark d-inline"
+							   style="margin-left: 5px">Подробнее о товаре</a>
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+		{% endfor %}
+	</div>
+{% endblock %}
+</body>
+</html>

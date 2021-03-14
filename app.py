@@ -1,10 +1,10 @@
 import os
-
-from flask import Flask, abort, render_template, redirect
+import requests
+from flask import Flask, abort, render_template, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
-
-from data import db_session
+from data import db_session, products_api
+from data.categories import Categories
 from data.products import Products
 from data.users import User
 from forms.add_proudct import AddProductForm
@@ -13,11 +13,12 @@ from forms.register import RegisterForm
 from tools.check_password import check_password
 
 app = Flask(__name__)
-db_session.global_init('db/main_db.db')
 app.config['SECRET_KEY'] = 'yandex_lyceum_secret_key'
 TITLE = 'HiTechStore'
 login_manager = LoginManager()
 login_manager.init_app(app)
+db_session.global_init('db/main_db.db')
+app.register_blueprint(products_api.blueprint)
 
 
 @app.route('/')
@@ -55,7 +56,17 @@ def register():
 
 @app.errorhandler(403)
 def forbidden(error):
-    return redirect('/')
+    return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
+
+
+@app.errorhandler(401)
+def unauthorized(error):
+    return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
 
 
 @app.route('/add_product', methods=["GET", "POST"])
@@ -71,20 +82,33 @@ def add_product():
             return render_template('add_product.html', title=title, form=form,
                                    message='Товар с таким названием уже существует')
 
+        image = form.image.data
+        filename = secure_filename(image.filename)
+        path = os.path.join(app.root_path, 'static', 'img', 'product_images', filename)
+        image.save(path)
         product = Products(
             name=form.name.data,
-            search_tags=form.search_tags.data,
-            price=form.price.data
+            price=form.price.data,
+            about=form.about.data,
+            specs=form.specs.data,
+            stringed_categories=form.search_tags.data,
+            image=url_for('static', filename=f'img/product_images/{filename}')
         )
-        if image := form.image.data:
-            filename = secure_filename(image.filename)
-            path = os.path.join(app.root_path, 'static', 'img', 'product_images', filename)
-            image.save(path)
-            product.image = path
+
+        for cat in form.search_tags.data.split(', '):
+            category = sess.query(Categories).filter(Categories.name == cat).first()
+            if not category:
+                category = Categories(
+                    name=cat
+                )
+            sess.add(category)
+
+            if category not in product.categories:
+                product.categories.append(category)
+
         sess.add(product)
         sess.commit()
         redirect('/catalog')
-    print('не прошло')
     return render_template('add_product.html', title=title, form=form)
 
 
@@ -103,6 +127,49 @@ def login():
                                message="Неправильный логин или пароль",
                                form=form, title=title)
     return render_template('login.html', title=title, form=form)
+
+
+@app.route('/catalog')
+def catalog():
+    title = 'Каталог | ' + TITLE
+    url = 'http://127.0.0.1:5000/api/products'
+    products = requests.get(url).json()
+    if 'error' in products:
+        return redirect('/')
+    products = products['products']
+    res_prods = []
+    index = 0
+    for _ in products[::3]:
+        res_prods.append(products[index:index+3])
+        index += 3
+    return render_template('catalog.html', title=title, products=res_prods)
+
+
+@app.route('/catalog/<string:filter>')
+def catalog_filtered(filter):
+    title = f'Каталог. Фильтр: {filter} | ' + TITLE
+    url = f'http://127.0.0.1:5000/api/products/{filter}'
+    products = requests.get(url).json()
+    if 'error' in products:
+        return redirect('/catalog')
+    products = products['products']
+    res_prods = []
+    index = 0
+    for _ in products[::3]:
+        res_prods.append(products[index:index + 3])
+        index += 3
+    return render_template('catalog.html', title=title, products=res_prods)
+
+
+@app.route('/catalog/<int:product_id>')
+def load_product_page(product_id):
+    url = f'http://127.0.0.1:5000/api/products/{product_id}'
+    product = requests.get(url).json()
+    if 'error' in product:
+        return abort(404)
+    product = product['product']
+    title = product['name'] + ' | ' + TITLE
+    return render_template('product.html', title=title, product=product)
 
 
 @login_manager.user_loader

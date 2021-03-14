@@ -22,11 +22,6 @@
 				<div class="navbar-nav">
 					<a class="nav-link active" aria-current="page" href="/">На главную</a>
 					<a class="nav-link active" aria-current="page" href="/catalog">Каталог</a>
-					<form class="d-flex ms-5">
-						<input class="form-control me-2" type="search" placeholder="Поиск по тегам"
-							   aria-label="Search">
-						<button class="btn btn-outline-dark" type="submit">Поиск</button>
-					</form>
 					<div class="position-absolute end-0 user-menu">
 						{% if not current_user.is_authenticated %}
 							<a class="nav-link active d-inline me-2" href="/login">

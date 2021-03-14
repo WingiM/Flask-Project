@@ -10,3 +10,9 @@
 .user-menu {
     margin-right: 5%;
 }
+
+.catalog-card {
+    width: 30%;
+    margin-left: 10px;
+    margin-right: 10px;
+}

@@ -30,6 +30,24 @@
 			{% endfor %}
 		</p>
 		<p class="mb-1">
+			{{ form.specs.label }}<br>
+			{{ form.specs(class="form-control") }}<br>
+			{% for error in form.specs.errors %}
+				<div class="alert alert-danger" role="alert">
+					{{ error }}
+				</div>
+			{% endfor %}
+		</p>
+		<p class="mb-1">
+			{{ form.about.label }}<br>
+			{{ form.about(class="form-control") }}<br>
+			{% for error in form.about.errors %}
+				<div class="alert alert-danger" role="alert">
+					{{ error }}
+				</div>
+			{% endfor %}
+		</p>
+		<p class="mb-1">
 			{{ form.image.label }}<br>
 			{{ form.image(class="form-control") }}<br>
 			{% for error in form.image.errors %}
