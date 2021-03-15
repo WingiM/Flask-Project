@@ -1,8 +1,7 @@
 import flask
-from flask import jsonify
+from flask import jsonify, request
 
 from . import db_session
-from .categories import Categories
 from .products import Products
 
 blueprint = flask.Blueprint(
@@ -15,34 +14,34 @@ blueprint = flask.Blueprint(
 @blueprint.route('/api/products', methods=["GET"])
 def get_products():
     sess = db_session.create_session()
-    products = sess.query(Products).all()
-    if not products:
-        return jsonify({'error': 'no products found'})
-    return jsonify(
-        {
-            'products':
-                [item.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about')) for item in products]
+    try:
+        types = request.args.get('types', type=str)
+        if types:
+            types = types.split(',')
+        else:
+            types = ''
+        price = request.args.get('price', type=str)
+        if price:
+            price = range(*map(int, request.args.get('price', type=str).split('-')))
+        else:
+            price = range(0, 10 ** 6)
+        sorting_orders = {
+            None: lambda x: x.price,
+            '1': lambda x: -x.price,
+            '2': lambda x: x.name
         }
-    )
-
-
-@blueprint.route('/api/products/<string:filter>', methods=["GET"])
-def get_filtered_products(filter):
-    sess = db_session.create_session()
-    all_categories = sess.query(Categories).all()
-    if filter not in [i.name for i in all_categories]:
-        return jsonify({'error': 'unknown category'})
-    products = []
-    for i in sess.query(Products).all():
-        for j in i.categories:
-            if j.name == filter:
-                products.append(i)
-    if not products:
-        return jsonify({'error': 'not products with such filter'})
+        products = filter(lambda x: x.price in price and all([i in [j.name for j in x.categories] for i in types]),
+                          sess.query(Products).all())
+        products = list(sorted(products, key=sorting_orders[request.args.get('order')]))
+        if not products:
+            return jsonify({'error': 'no products found'})
+    except KeyError:
+        return jsonify({'error': 'Bad request'})
     return jsonify(
         {
             'products':
-                [item.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about')) for item in products]
+                [item.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about')) for item in
+                 products]
         }
     )
 
@@ -55,8 +54,6 @@ def get_product(product_id):
         return jsonify({'error': 'no product with such name'})
     return jsonify(
         {
-            'product': product.to_dict(only=('id', 'name', 'categories', 'image', 'price', 'about'))
+            'product': product.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about'))
         }
     )
-
-

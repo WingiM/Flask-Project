@@ -13,6 +13,6 @@
 
 .catalog-card {
     width: 30%;
-    margin-left: 10px;
-    margin-right: 10px;
+    margin-right: auto;
+    margin-left: auto;
 }

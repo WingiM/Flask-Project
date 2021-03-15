@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, abort, render_template, redirect, url_for
+from flask import Flask, abort, render_template, redirect, url_for, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 from data import db_session, products_api
@@ -14,6 +14,7 @@ from tools.check_password import check_password
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandex_lyceum_secret_key'
+app.config['JSON_AS_ASCII'] = False
 TITLE = 'HiTechStore'
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -54,17 +55,9 @@ def register():
     return render_template('register.html', title=title, form=form)
 
 
-@app.errorhandler(403)
-def forbidden(error):
-    return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
-
-
-@app.errorhandler(404)
-def not_found(error):
-    return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
-
-
 @app.errorhandler(401)
+@app.errorhandler(403)
+@app.errorhandler(404)
 def unauthorized(error):
     return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
 
@@ -132,31 +125,20 @@ def login():
 @app.route('/catalog')
 def catalog():
     title = 'Каталог | ' + TITLE
-    url = 'http://127.0.0.1:5000/api/products'
-    products = requests.get(url).json()
+    url = f'http://127.0.0.1:5000/api/products'
+    params = {
+        'price': request.args.get('price'),
+        'types': request.args.get('types'),
+        'order': request.args.get('order')
+    }
+    products = requests.get(url, params=params).json()
     if 'error' in products:
-        return redirect('/')
+        return abort(404)
     products = products['products']
     res_prods = []
     index = 0
     for _ in products[::3]:
         res_prods.append(products[index:index+3])
-        index += 3
-    return render_template('catalog.html', title=title, products=res_prods)
-
-
-@app.route('/catalog/<string:filter>')
-def catalog_filtered(filter):
-    title = f'Каталог. Фильтр: {filter} | ' + TITLE
-    url = f'http://127.0.0.1:5000/api/products/{filter}'
-    products = requests.get(url).json()
-    if 'error' in products:
-        return redirect('/catalog')
-    products = products['products']
-    res_prods = []
-    index = 0
-    for _ in products[::3]:
-        res_prods.append(products[index:index + 3])
         index += 3
     return render_template('catalog.html', title=title, products=res_prods)
 
