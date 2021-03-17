@@ -24,6 +24,7 @@ api.add_resource(products_resources.ProductResource, '/api/products/<int:product
 login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init('db/main_db.db')
+from forms.catalog_filter import CatalogFilterForm
 
 
 @app.route('/')
@@ -126,10 +127,20 @@ def login():
     return render_template('login.html', title=title, form=form)
 
 
-@app.route('/catalog')
+@app.route('/catalog', methods=["GET", "POST"])
 def catalog():
+    form = CatalogFilterForm()
     title = 'Каталог | ' + TITLE
     url = f'http://127.0.0.1:5000/api/products'
+    if form.validate_on_submit():
+        params = {
+            'price': form.price.data if form.price.data else None,
+            'types': ','.join(form.types.data.split(', ')) if form.types.data else None,
+            'order': form.sorting.data
+        }
+        url = requests.get('http://127.0.0.1:5000/catalog', params=params).url
+        print(url)
+        return redirect(url.split('5000')[1])
     params = {
         'price': request.args.get('price'),
         'types': request.args.get('types'),
@@ -144,7 +155,7 @@ def catalog():
     for _ in products[::3]:
         res_prods.append(products[index:index + 3])
         index += 3
-    return render_template('catalog.html', title=title, products=res_prods)
+    return render_template('catalog.html', title=title, products=res_prods, form=form)
 
 
 @app.route('/catalog/<int:product_id>')

@@ -10,7 +10,7 @@ class ProductsListResource(Resource):
         try:
             types = request.args.get('types', type=str)
             if types:
-                types = types.split(',')
+                types = types.lower().split(',')
             else:
                 types = ''
             price = request.args.get('price', type=str)
@@ -18,14 +18,17 @@ class ProductsListResource(Resource):
                 price = range(*map(int, request.args.get('price', type=str).split('-')))
             else:
                 price = range(0, 10 ** 6)
+            order = request.args.get('order')
+            if not order:
+                order = '0'
             sorting_orders = {
-                None: lambda x: x.price,
+                '0': lambda x: x.price,
                 '1': lambda x: -x.price,
                 '2': lambda x: x.name
             }
-            products = filter(lambda x: x.price in price and all([i in [j.name for j in x.categories] for i in types]),
+            products = filter(lambda x: x.price in price and all([i in [j.name.lower() for j in x.categories] for i in types]),
                               sess.query(Products).all())
-            products = list(sorted(products, key=sorting_orders[request.args.get('order')]))
+            products = list(sorted(products, key=sorting_orders[order]))
             if not products:
                 return jsonify({'error': 'no products found'})
         except KeyError:
