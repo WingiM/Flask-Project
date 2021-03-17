@@ -2,8 +2,9 @@ import os
 import requests
 from flask import Flask, abort, render_template, redirect, url_for, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_restful import Api
 from werkzeug.utils import secure_filename
-from data import db_session, products_api
+from data import db_session, products_resources
 from data.categories import Categories
 from data.products import Products
 from data.users import User
@@ -12,14 +13,17 @@ from forms.login import LoginForm
 from forms.register import RegisterForm
 from tools.check_password import check_password
 
+TITLE = 'HiTechStore'
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandex_lyceum_secret_key'
 app.config['JSON_AS_ASCII'] = False
-TITLE = 'HiTechStore'
+api = Api(app)
+api.add_resource(products_resources.ProductsListResource, '/api/products')
+api.add_resource(products_resources.ProductResource, '/api/products/<int:product_id>')
 login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init('db/main_db.db')
-app.register_blueprint(products_api.blueprint)
 
 
 @app.route('/')
@@ -138,7 +142,7 @@ def catalog():
     res_prods = []
     index = 0
     for _ in products[::3]:
-        res_prods.append(products[index:index+3])
+        res_prods.append(products[index:index + 3])
         index += 3
     return render_template('catalog.html', title=title, products=res_prods)
 
