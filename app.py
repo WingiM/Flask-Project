@@ -9,6 +9,7 @@ from data.categories import Categories
 from data.products import Products
 from data.users import User
 from forms.add_proudct import AddProductForm
+from forms.catalog_filter import CatalogFilterForm
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from tools.check_password import check_password
@@ -24,7 +25,6 @@ api.add_resource(products_resources.ProductResource, '/api/products/<int:product
 login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init('db/main_db.db')
-from forms.catalog_filter import CatalogFilterForm
 
 
 @app.route('/')
@@ -32,39 +32,46 @@ def welcome():
     return render_template('welcome.html', title='Главная страница | ' + TITLE)
 
 
-@app.route('/register', methods=["POST", "GET"])
-def register():
-    title = 'Регистрация | ' + TITLE
-    form = RegisterForm()
+@app.route('/catalog', methods=["GET", "POST"])
+def catalog():
+    form = CatalogFilterForm()
+    title = 'Каталог | ' + TITLE
+    url = f'http://127.0.0.1:5000/api/products'
     if form.validate_on_submit():
-        if not check_password(form.password.data):
-            return render_template('register.html', form=form, title=title,
-                                   message='Пароль не соответствует требованиям')
-        if form.password.data != form.password_again.data:
-            return render_template('register.html', form=form, title=title, message='Пароли не совпадают!')
-        sess = db_session.create_session()
-        if sess.query(User).filter(User.nickname == form.nickname.data).first():
-            return render_template('register.html', form=form, title=title,
-                                   message='Пользователь с таким именем уже существует')
-        if sess.query(User).filter(User.email == form.email.data).first():
-            return render_template('register.html', form=form, title=title, message='Почта уже используется')
+        params = {
+            'price': form.price.data if form.price.data else None,
+            'types': ','.join(form.types.data.split(', ')) if form.types.data else None,
+            'order': form.sorting.data
+        }
+        url = requests.get('http://127.0.0.1:5000/catalog', params=params).url
+        print(url)
+        return redirect(url.split('5000')[1])
+    params = {
+        'price': request.args.get('price'),
+        'types': request.args.get('types'),
+        'order': request.args.get('order')
+    }
+    products = requests.get(url, params=params).json()
+    if 'error' in products:
+        return abort(404)
+    products = products['products']
+    res_prods = []
+    index = 0
+    for _ in products[::3]:
+        res_prods.append(products[index:index + 3])
+        index += 3
+    return render_template('catalog.html', title=title, products=res_prods, form=form)
 
-        user = User(
-            nickname=form.nickname.data,
-            email=form.email.data
-        )
-        user.set_password(form.password.data)
-        sess.add(user)
-        sess.commit()
-        return redirect('/login')
-    return render_template('register.html', title=title, form=form)
 
-
-@app.errorhandler(401)
-@app.errorhandler(403)
-@app.errorhandler(404)
-def unauthorized(error):
-    return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
+@app.route('/catalog/<int:product_id>')
+def load_product_page(product_id):
+    url = f'http://127.0.0.1:5000/api/products/{product_id}'
+    product = requests.get(url).json()
+    if 'error' in product:
+        return abort(404)
+    product = product['product']
+    title = product['name'] + ' | ' + TITLE
+    return render_template('product.html', title=title, product=product)
 
 
 @app.route('/add_product', methods=["GET", "POST"])
@@ -110,6 +117,34 @@ def add_product():
     return render_template('add_product.html', title=title, form=form)
 
 
+@app.route('/register', methods=["POST", "GET"])
+def register():
+    title = 'Регистрация | ' + TITLE
+    form = RegisterForm()
+    if form.validate_on_submit():
+        if not check_password(form.password.data):
+            return render_template('register.html', form=form, title=title,
+                                   message='Пароль не соответствует требованиям')
+        if form.password.data != form.password_again.data:
+            return render_template('register.html', form=form, title=title, message='Пароли не совпадают!')
+        sess = db_session.create_session()
+        if sess.query(User).filter(User.nickname == form.nickname.data).first():
+            return render_template('register.html', form=form, title=title,
+                                   message='Пользователь с таким именем уже существует')
+        if sess.query(User).filter(User.email == form.email.data).first():
+            return render_template('register.html', form=form, title=title, message='Почта уже используется')
+
+        user = User(
+            nickname=form.nickname.data,
+            email=form.email.data
+        )
+        user.set_password(form.password.data)
+        sess.add(user)
+        sess.commit()
+        return redirect('/login')
+    return render_template('register.html', title=title, form=form)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     title = 'Авторизация | ' + TITLE
@@ -127,52 +162,17 @@ def login():
     return render_template('login.html', title=title, form=form)
 
 
-@app.route('/catalog', methods=["GET", "POST"])
-def catalog():
-    form = CatalogFilterForm()
-    title = 'Каталог | ' + TITLE
-    url = f'http://127.0.0.1:5000/api/products'
-    if form.validate_on_submit():
-        params = {
-            'price': form.price.data if form.price.data else None,
-            'types': ','.join(form.types.data.split(', ')) if form.types.data else None,
-            'order': form.sorting.data
-        }
-        url = requests.get('http://127.0.0.1:5000/catalog', params=params).url
-        print(url)
-        return redirect(url.split('5000')[1])
-    params = {
-        'price': request.args.get('price'),
-        'types': request.args.get('types'),
-        'order': request.args.get('order')
-    }
-    products = requests.get(url, params=params).json()
-    if 'error' in products:
-        return abort(404)
-    products = products['products']
-    res_prods = []
-    index = 0
-    for _ in products[::3]:
-        res_prods.append(products[index:index + 3])
-        index += 3
-    return render_template('catalog.html', title=title, products=res_prods, form=form)
-
-
-@app.route('/catalog/<int:product_id>')
-def load_product_page(product_id):
-    url = f'http://127.0.0.1:5000/api/products/{product_id}'
-    product = requests.get(url).json()
-    if 'error' in product:
-        return abort(404)
-    product = product['product']
-    title = product['name'] + ' | ' + TITLE
-    return render_template('product.html', title=title, product=product)
-
-
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
+
+
+@app.errorhandler(401)
+@app.errorhandler(403)
+@app.errorhandler(404)
+def unauthorized(error):
+    return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
 
 
 @app.route('/logout')
