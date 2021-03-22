@@ -10,6 +10,7 @@ from data.products import Products
 from data.users import User
 from forms.add_proudct import AddProductForm
 from forms.catalog_filter import CatalogFilterForm
+from forms.edit_product import EditProductForm
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from tools.check_password import check_password
@@ -44,7 +45,6 @@ def catalog():
             'order': form.sorting.data
         }
         url = requests.get('http://127.0.0.1:5000/catalog', params=params).url
-        print(url)
         return redirect(url.split('5000')[1])
     params = {
         'price': request.args.get('price'),
@@ -114,6 +114,53 @@ def add_product():
         sess.add(product)
         sess.commit()
         redirect('/catalog')
+    return render_template('add_product.html', title=title, form=form)
+
+
+@app.route('/edit_product/<int:id>', methods=["GET", "POST"])
+@login_required
+def edit_product(id):
+    if not current_user.is_admin:
+        return abort(403)
+    sess = db_session.create_session()
+    if not (product := sess.query(Products).get(id)):
+        return abort(404)
+    title = 'Редактирование продукта | ' + TITLE
+    form = EditProductForm()
+    if request.method == 'GET':
+        form.name.data = product.name
+        form.price.data = product.price
+        form.about.data = product.about
+        form.specs.data = product.specs
+        form.search_tags.data = product.stringed_categories
+    if form.validate_on_submit():
+        if sess.query(Products).filter(Products.name == form.name.data, Products.id != id).first():
+            return render_template('add_product.html', title=title, form=form,
+                                   message='Товар с таким названием уже существует')
+        product.name = form.name.data
+        product.price = form.price.data
+        product.about = form.about.data
+        product.specs = form.specs.data
+        product.stringed_categories = form.search_tags.data
+        if form.image.data:
+            image = form.image.data
+            filename = secure_filename(image.filename)
+            path = os.path.join(app.root_path, 'static', 'img', 'product_images', filename)
+            image.save(path)
+            product.image = url_for('static', filename=f'img/product_images/{filename}')
+
+        for cat in form.search_tags.data.split(', '):
+            category = sess.query(Categories).filter(Categories.name == cat).first()
+            if not category:
+                category = Categories(
+                    name=cat
+                )
+            sess.add(category)
+
+            if category not in product.categories:
+                product.categories.append(category)
+        sess.commit()
+        return redirect('/catalog')
     return render_template('add_product.html', title=title, form=form)
 
 
