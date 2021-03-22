@@ -11,4 +11,4 @@ class EditProductForm(FlaskForm):
     specs = TextAreaField('Характеристики товара', validators=[DataRequired()])
     about = TextAreaField('Краткое описание товара', validators=[DataRequired()])
     price = IntegerField('Цена товара', validators=[DataRequired()])
-    submit = SubmitField('Добавить товар')
+    submit = SubmitField('Отредактировать товар')
