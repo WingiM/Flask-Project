@@ -27,3 +27,25 @@
     float: left;
     padding: 10px;
 }
+
+.product-image {
+    border: 2px solid black;
+    width: 20%;
+    height: 20%;
+    margin-left: 40%;
+    margin-bottom: 10px;
+}
+
+.product-page {
+    text-align: center;
+}
+
+.product-text {
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+.fav-image {
+    width: 5%;
+    height: 5%;
+}

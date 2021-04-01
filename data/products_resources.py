@@ -36,7 +36,7 @@ class ProductsListResource(Resource):
         return jsonify(
             {
                 'products':
-                    [item.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about')) for item in
+                    [item.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about', 'specs')) for item in
                      products]
             }
         )
@@ -50,6 +50,6 @@ class ProductResource(Resource):
             return jsonify({'error': 'no product with such name'})
         return jsonify(
             {
-                'product': product.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about'))
+                'product': product.to_dict(only=('id', 'name', 'stringed_categories', 'image', 'price', 'about', 'specs'))
             }
         )

@@ -74,6 +74,18 @@ def load_product_page(product_id):
     return render_template('product.html', title=title, product=product)
 
 
+@app.route('/catalog/<int:product_id>/add_to_cart')
+@login_required
+def add_to_cart(product_id):
+    sess = db_session.create_session()
+    product = sess.query(Products).get(product_id)
+    user = sess.query(User).get(current_user.id)
+    user.cart.append(product)
+    sess.commit()
+    print(user.cart)
+    return redirect(f'/catalog/{product_id}')
+
+
 @app.route('/add_product', methods=["GET", "POST"])
 @login_required
 def add_product():

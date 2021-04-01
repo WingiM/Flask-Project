@@ -9,7 +9,7 @@
 
 </head>
 <body>
-<header>
+<header class="header">
 	<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom
 	sticky-top d-flex w-100 shadow p-3 mb-5 bg-white rounded">
 		<div class="container-fluid">
@@ -42,7 +42,6 @@
 										<li><a class="dropdown-item" href="/add_product">Добавить товар</a></li>
 									{% endif %}
 									<li><a class="dropdown-item" href="/cart/{{ current_user.id }}">Корзина</a></li>
-									<li><a class="dropdown-item" href="/favourites">Избранное</a></li>
 									<li><a class="dropdown-item" href="/logout">Выйти</a></li>
 								</ul>
 							</div>

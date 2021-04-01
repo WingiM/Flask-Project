@@ -36,7 +36,13 @@
 							 alt="не вышло">
 						<div class="card-body">
 							<h5 class="card-title">{{ product.name }}</h5>
-							<p class="card-text">{{ product.about }}<br>{{ product.stringed_categories }}</p>
+							{% if product.about|length > 100 %}
+								<p class="card-text">{{ product.about[:100].strip() + '...' }}<br><b>{{ product.stringed_categories }}</b>
+								</p>
+							{% else %}
+								<p class="card-text">{{ product.about }}<br><b>{{ product.stringed_categories }}</b>
+								</p>
+							{% endif %}
 						</div>
 						<div class="card-footer">
 							<p>Цена: {{ product.price }}₽</p>
