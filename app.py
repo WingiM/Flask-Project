@@ -37,14 +37,14 @@ def welcome():
 def catalog():
     form = CatalogFilterForm()
     title = 'Каталог | ' + TITLE
-    url = f'http://127.0.0.1:5000/api/products'
+    url = f'{request.url_root}api/products'
     if form.validate_on_submit():
         params = {
             'price': form.price.data if form.price.data else None,
             'types': ','.join(form.types.data.split(', ')) if form.types.data else None,
             'order': form.sorting.data
         }
-        url = requests.get('http://127.0.0.1:5000/catalog', params=params).url
+        url = requests.get(f'{request.url_root}catalog', params=params).url
         return redirect(url.split('5000')[1])
     params = {
         'price': request.args.get('price'),
@@ -65,7 +65,7 @@ def catalog():
 
 @app.route('/catalog/<int:product_id>')
 def load_product_page(product_id):
-    url = f'http://127.0.0.1:5000/api/products/{product_id}'
+    url = f'{request.url_root}api/products/{product_id}'
     product = requests.get(url).json()
     if 'error' in product:
         return abort(404)
@@ -245,3 +245,4 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+    print(1)
