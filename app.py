@@ -135,7 +135,8 @@ def edit_product(id):
     if not current_user.is_admin:
         return abort(403)
     sess = db_session.create_session()
-    if not (product := sess.query(Products).get(id)):
+    product = sess.query(Products).get(id)
+    if not product:
         return abort(404)
     title = 'Редактирование продукта | ' + TITLE
     form = EditProductForm()
