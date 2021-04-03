@@ -45,7 +45,8 @@ def catalog():
             'order': form.sorting.data
         }
         url = requests.get(f'{request.url_root}catalog', params=params).url
-        return redirect(url.split('5000')[1])
+        print('1')
+        return redirect(url.split(request.url_root)[1])
     params = {
         'price': request.args.get('price'),
         'types': request.args.get('types'),
