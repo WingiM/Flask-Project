@@ -9,9 +9,13 @@
   {% block content %}
   
     {% for product in current_user.cart %}
- 
-  <p>{{ product }}<p>
-  
+  	<p>
+		<img src="{{ product.image }}">
+		{{ product.name }}
+		{{ product.price }}
+		<b>{{ prodct.stringed_categories }}</b>
+	</p>
+	<br>
     {% endfor %}
   
   {% endblock %}
