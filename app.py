@@ -178,6 +178,15 @@ def edit_product(id):
     return render_template('add_product.html', title=title, form=form)
 
 
+@app.route('/cart')
+@login_required
+def user_cart():
+    title = 'Корзина | ' + TITLE
+    if not current_user.id:
+        return redirect('/register')
+    return render_template('user_cart.html', title=title)
+
+
 @app.route('/register', methods=["POST", "GET"])
 def register():
     title = 'Регистрация | ' + TITLE
