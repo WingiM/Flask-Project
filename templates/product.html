@@ -19,7 +19,13 @@
 		<p>{{ product.specs }}</p>
 		<h4>Цена: {{ product.price }} рублей</h4>
 		{% if current_user.id %}
-			<a href="/catalog/{{ product.id }}/add_to_cart" class="btn btn-outline-dark">Добавить товар в корзину</a>
+			{% if not has %}
+				<a href="/catalog/{{ product.id }}/add_to_cart" class="btn btn-outline-dark">Добавить товар в
+					корзину</a>
+			{% else %}
+				<a href="/catalog/{{ product.id }}/remove_from_cart" class="btn btn-outline-dark">Удалить товар из
+					корзины</a>
+			{% endif %}
 		{% endif %}
 		<br><br>
 		{% if current_user.is_admin %}

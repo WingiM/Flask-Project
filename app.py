@@ -45,7 +45,6 @@ def catalog():
             'order': form.sorting.data
         }
         url = requests.get(f'{request.url_root}catalog', params=params).url
-        print('1')
         return redirect(url.split(request.url_root)[1])
     params = {
         'price': request.args.get('price'),
@@ -72,7 +71,10 @@ def load_product_page(product_id):
         return abort(404)
     product = product['product']
     title = product['name'] + ' | ' + TITLE
-    return render_template('product.html', title=title, product=product)
+    sess = db_session.create_session()
+    user = sess.query(User).get(current_user.id)
+    has_product = any([i.name == product['name'] for i in user.cart])
+    return render_template('product.html', title=title, product=product, has=has_product)
 
 
 @app.route('/catalog/<int:product_id>/add_to_cart')
@@ -83,7 +85,17 @@ def add_to_cart(product_id):
     user = sess.query(User).get(current_user.id)
     user.cart.append(product)
     sess.commit()
-    print(user.cart)
+    return redirect(f'/catalog/{product_id}')
+
+
+@app.route('/catalog/<int:product_id>/remove_from_cart')
+@login_required
+def remove_from_cart(product_id):
+    sess = db_session.create_session()
+    product = sess.query(Products).get(product_id)
+    user = sess.query(User).get(current_user.id)
+    user.cart.remove(product)
+    sess.commit()
     return redirect(f'/catalog/{product_id}')
 
 
@@ -181,10 +193,20 @@ def edit_product(id):
 @app.route('/cart')
 @login_required
 def user_cart():
+    total = 0
     title = 'Корзина | ' + TITLE
     if not current_user.id:
         return redirect('/register')
-    return render_template('user_cart.html', title=title)
+    sess = db_session.create_session()
+    user = sess.query(User).get(current_user.id)
+    products = user.cart
+    res_prods = []
+    index = 0
+    for _ in products[::3]:
+        res_prods.append(products[index:index + 3])
+        total += sum([prod.price for prod in products[index:index + 3]])
+        index += 3
+    return render_template('user_cart.html', title=title, products=res_prods, total=total)
 
 
 @app.route('/register', methods=["POST", "GET"])
@@ -241,7 +263,7 @@ def load_user(user_id):
 @app.errorhandler(401)
 @app.errorhandler(403)
 @app.errorhandler(404)
-def unauthorized(error):
+def errorhandler(error):
     return render_template('error.html', title='Ошибка | ' + TITLE, error=error)
 
 
@@ -255,4 +277,3 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-    print(1)

@@ -4,20 +4,28 @@
 	<meta charset="UTF-8">
 </head>
 <body>
-  {% extends "base.html" %}
-  
-  {% block content %}
-  
-    {% for product in current_user.cart %}
-  	<p>
-		<img src="{{ product.image }}">
-		{{ product.name }}
-		{{ product.price }}
-		<b>{{ product.stringed_categories }}</b>
-	</p>
-	<br>
-    {% endfor %}
-  
-  {% endblock %}
+{% extends "base.html" %}
+
+{% block content %}
+	{% for row in products %}
+		<div class="row" style="margin: auto auto 10px">
+			{% for product in row %}
+				<div class="card catalog-card">
+					<img src="{{ product.image }}" class="card-img-top" width="18rem" height="300">
+					<div class="card-body">
+						<h5 class="card-title">{{ product.name }}</h5>
+						<p><b class="card-text">{{ product.stringed_categories }}</b></p>
+					</div>
+					<div class="card-footer">
+						<p>Цена: {{ product.price }}₽</p>
+						<a href="/catalog/{{ product.id }}" class="btn btn-outline-dark">Подробнее о товаре</a>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% endfor %}
+	<hr>
+	<h2 style="margin-left: 10px">Итого: {{ total }}</h2>
+{% endblock %}
 </body>
 </html>
