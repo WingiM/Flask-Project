@@ -65,6 +65,7 @@ def catalog():
 
 @app.route('/catalog/<int:product_id>')
 def load_product_page(product_id):
+    has_product = False
     url = f'{request.url_root}api/products/{product_id}'
     product = requests.get(url).json()
     if 'error' in product:
@@ -72,8 +73,9 @@ def load_product_page(product_id):
     product = product['product']
     title = product['name'] + ' | ' + TITLE
     sess = db_session.create_session()
-    user = sess.query(User).get(current_user.id)
-    has_product = any([i.name == product['name'] for i in user.cart])
+    if current_user.is_authenticated:
+        user = sess.query(User).get(current_user.id)
+        has_product = any([i.name == product['name'] for i in user.cart])
     return render_template('product.html', title=title, product=product, has=has_product)
 
 
