@@ -26,6 +26,10 @@
 	{% endfor %}
 	<hr>
 	<h2 style="margin-left: 10px">Итого: {{ total }}₽</h2>
+	{% if total != 0 %}
+		<h4 style="margin-left: 10px">Уточнить количество товаров и детали покупки можно в одном из наших магазинов по
+			всей России!</h4>
+	{% endif %}
 {% endblock %}
 </body>
 </html>
