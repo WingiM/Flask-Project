@@ -7,6 +7,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+	<h1>Ваша корзина, {{ current_user.nickname }}:</h1>
+	<br>
 	{% for row in products %}
 		<div class="row" style="margin: auto auto 10px">
 			{% for product in row %}
